@@ -21,9 +21,8 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* 1. Logo Section */}
           <div className="flex-shrink-0 flex items-center">
-            <div className="h-8 w-8 bg-blue-500 rounded-lg mr-2"></div>
             <span className="text-xl font-bold tracking-tight">
-              Rasan<span className="text-blue-500">App</span>
+              Express<span className="text-blue-500">Mart</span>
             </span>
           </div>
 
