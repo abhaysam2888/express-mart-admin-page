@@ -43,6 +43,7 @@ class OrdersService {
 
       // 3. Sorting and Limit
       queries.push(Query.orderDesc("$createdAt"));
+      queries.push(Query.select(["*", "deliveryAgents.*"]));
       queries.push(Query.limit(10000000));
 
       const response = await this.databases.listRows({
@@ -50,7 +51,6 @@ class OrdersService {
         tableId: this.collectionId,
         queries: queries,
       });
-
       const parsedDocuments = response.rows.map((order) => {
         let parsedItems = [];
         let parsedAddress = [];
@@ -62,7 +62,7 @@ class OrdersService {
           } catch (e) {
             console.error(
               `Error parsing JSON for order ID ${order.$id} items:`,
-              e
+              e,
             );
             // Fallback to empty array if parsing fails
             parsedItems = [];

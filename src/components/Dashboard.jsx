@@ -132,7 +132,7 @@ const Dashboard = () => {
         orderList: orders,
         restaurantsWalletList: restaurantsWallet,
       }),
-    [orders, restaurantsWallet]
+    [orders, restaurantsWallet],
   );
 
   const filterDisplay = useMemo(() => {

@@ -9,6 +9,7 @@ const statusColors = {
 
 const OrderCard = ({ order }) => {
   const [copied, setCopied] = useState(false);
+  console.log(order);
 
   const copyOrderId = async () => {
     try {
@@ -27,7 +28,7 @@ const OrderCard = ({ order }) => {
 
   const subTotal = items.reduce(
     (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
-    0
+    0,
   );
 
   const finalTotal = (order.totalAmount || 0) + (order.deliveryCharge || 0);
@@ -73,6 +74,12 @@ const OrderCard = ({ order }) => {
           {order.shippingAddress?.details ||
             order.shippingAddress?.street ||
             "N/A"}
+        </p>
+        <p className="break-words">
+          <span className="font-semibold">Delivery Agent:</span>{" "}
+          {order.deliveryAgents.length > 0
+            ? order?.deliveryAgents?.[0].name
+            : "N/A"}
         </p>
       </div>
 
