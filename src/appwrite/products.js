@@ -17,12 +17,16 @@ export class Service {
     this.collectionId = PRODUCT_COLLECTION_ID;
   }
 
-  async listProducts({ limit = 10, cursor = null, productId = "" } = {}) {
+  async listProducts({ limit = 10, offset = 0, search = "" } = {}) {
     try {
-      const queries = [Query.orderAsc("$id"), Query.limit(limit)];
+      const queries = [
+        Query.orderAsc("$id"),
+        Query.limit(limit),
+        Query.offset(offset),
+      ];
 
-      if (cursor) {
-        queries.push(Query.cursorAfter(cursor));
+      if (search.length !== 0) {
+        queries.push(Query.contains("productName", search));
       }
 
       const result = await this.databases.listRows({
@@ -33,10 +37,6 @@ export class Service {
 
       return {
         products: result.rows,
-        nextCursor:
-          result.rows.length > 0
-            ? result.rows[result.rows.length - 1].$id
-            : null,
         total: result.total,
       };
     } catch (error) {
@@ -46,8 +46,6 @@ export class Service {
 
   async searchProducts({ searchTerm = "", limit = 100 }) {
     try {
-      console.log(searchTerm);
-
       const queries = [Query.limit(limit)];
 
       if (searchTerm.length != 0) {

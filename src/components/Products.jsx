@@ -7,19 +7,23 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [cursor, setCursor] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const [offset, setOffset] = useState(0);
+  const LIMIT = 9;
 
   const observer = useRef();
 
   const lastProductElementRef = useCallback(
     (node) => {
-      if (loading) return;
+      if (loading || fetchingRef.current) return;
+
       if (observer.current) observer.current.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore) {
-          fetchProducts(); // Trigger next fetch
+          fetchProducts();
         }
       });
 
@@ -30,42 +34,57 @@ const Products = () => {
 
   const fetchingRef = useRef(false);
 
-  const fetchProducts = async () => {
-    if (fetchingRef.current || !hasMore) return;
+  const fetchProducts = async (isNewSearch = false) => {
+    if (fetchingRef.current || (!hasMore && !isNewSearch)) return;
 
     fetchingRef.current = true;
     setLoading(true);
 
+    // Use the current offset unless it's a new search
+    const currentOffset = isNewSearch ? 0 : offset;
+
     try {
       const res = await productService.listProducts({
-        limit: 9,
-        cursor,
+        limit: LIMIT,
+        offset: currentOffset,
+        search: search,
       });
 
-      // ✅ DE-DUPLICATE HERE
-      setProducts((prev) => {
-        const map = new Map(prev.map((p) => [p.$id, p]));
-        res.products.forEach((p) => map.set(p.$id, p));
-        return Array.from(map.values());
-      });
+      setProducts((prev) =>
+        isNewSearch ? res.products : [...prev, ...res.products],
+      );
+      setOffset(currentOffset + res.products.length);
 
-      setCursor(res.nextCursor);
-
-      if (!res.nextCursor || res.products.length < 9) {
+      if (res.products.length < LIMIT) {
         setHasMore(false);
+      } else {
+        setHasMore(true);
       }
     } catch (err) {
-      console.error("Failed to fetch products:", err);
+      console.error(err);
     } finally {
       fetchingRef.current = false;
       setLoading(false);
     }
   };
 
-  // Initial Load
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    setProducts([]);
+    setOffset(0);
+    setHasMore(true);
+    fetchProducts(true);
+  }, [search]);
+
+  const handleSearch = () => {
+    const value = searchInput;
+    // If the user clicks search with an empty box, treat it as a reset
+    setSearch(value);
+  };
+
+  const handleClear = () => {
+    setSearchInput("");
+    setSearch(""); // This triggers the useEffect to fetch all products
+  };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
@@ -85,11 +104,42 @@ const Products = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-extrabold text-gray-900">
-          Store Inventory
+          Store Inventory({products.length})
         </h1>
-        <div className="text-sm font-medium text-gray-500">
-          Showing {products.length} Products
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-3 w-full md:w-[500px] mb-5">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            // Optional: Trigger search on "Enter" key
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            className="w-full px-4 py-2 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 pr-10"
+          />
+          {searchInput && (
+            <button
+              onClick={handleClear}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          )}
         </div>
+
+        <button
+          disabled={loading}
+          onClick={handleSearch}
+          className={`px-5 py-2 rounded-xl font-semibold transition ${
+            loading
+              ? "bg-blue-300 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          }`}
+        >
+          {loading ? "Searching..." : "Search"}
+        </button>
       </div>
 
       {products.length === 0 && !loading ? (
