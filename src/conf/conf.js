@@ -6,6 +6,8 @@ const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const orderId = import.meta.env.VITE_APPWRITE_ORDER_ID;
 const productCategoryId = import.meta.env.VITE_APPWRITE_PRODUCTS_CATEGORY_ID;
 const productId = import.meta.env.VITE_APPWRITE_PRODUCTS_ID;
+const bodyCategoryId = import.meta.env.VITE_APPWRITE_BODY_CATEGORY_ID;
+const headerCategoryId = import.meta.env.VITE_APPWRITE_HEADER_CATEGORY_ID;
 
 export {
   endpoint,
@@ -16,4 +18,6 @@ export {
   orderId,
   productCategoryId,
   productId,
+  bodyCategoryId,
+  headerCategoryId,
 };

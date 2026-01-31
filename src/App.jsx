@@ -13,6 +13,8 @@ import Notification from "./components/Notification";
 import Crousal from "./components/Crousal";
 import ProdcutCategory from "./components/ProdcutCategory";
 import AddProductCategory from "./components/AddProductCategory";
+import BodyCategory from "./components/BodyCategory";
+import HeaderCategory from "./components/HeaderCategory";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -35,6 +37,8 @@ export default function App() {
           <Route path="/notification" element={<Notification />} />
           <Route path="/prodcutCategory" element={<ProdcutCategory />} />
           <Route path="/AddprodcutCategory" element={<AddProductCategory />} />
+          <Route path="/BodyCategory" element={<BodyCategory />} />
+          <Route path="/HeaderCategory" element={<HeaderCategory />} />
           <Route path="/Crousal" element={<Crousal />} />
         </Route>
       </Route>

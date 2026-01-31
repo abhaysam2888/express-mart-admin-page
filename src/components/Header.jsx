@@ -10,6 +10,8 @@ const Header = () => {
     { name: "Add product", to: "/addProduct" },
     { name: "Products", to: "/products" },
     { name: "Products Category", to: "/prodcutCategory" },
+    { name: "Body Category", to: "/BodyCategory" },
+    { name: "Header Category", to: "/HeaderCategory" },
     { name: "Add Category", to: "/AddprodcutCategory" },
     { name: "Notification", to: "/notification" },
     { name: "Crousal", to: "/crousal" },

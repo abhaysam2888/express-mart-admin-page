@@ -1,8 +1,10 @@
 import { Account, Client, TablesDB, Storage } from "appwrite";
 import {
+  bodyCategoryId,
   crousalId,
   databaseId,
   endpoint,
+  headerCategoryId,
   orderId,
   productCategoryId,
   productId,
@@ -17,6 +19,8 @@ const PRODUCT_CATEGORY_COLLECTION_ID = productCategoryId;
 const PRODUCT_COLLECTION_ID = productId;
 const ORDER_COLLECTION_ID = orderId;
 const CROUSAL_COLLECTION_ID = crousalId;
+const BODY_CATEGORY_ID = bodyCategoryId;
+const HEADER_CATEGORY_ID = headerCategoryId;
 
 const client = new Client()
   .setEndpoint(APPWRITE_ENDPOINT)
@@ -39,4 +43,6 @@ export {
   ORDER_COLLECTION_ID,
   CROUSAL_COLLECTION_ID,
   storage,
+  BODY_CATEGORY_ID,
+  HEADER_CATEGORY_ID,
 };
