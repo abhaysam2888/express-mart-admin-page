@@ -9,6 +9,7 @@ import {
   productId,
   projectId,
 } from "../conf/conf";
+import imageCompression from "browser-image-compression";
 
 const client = new Client().setEndpoint(endpoint).setProject(projectId);
 
@@ -119,14 +120,18 @@ const AddProducts = () => {
     try {
       let fileUrl = editData?.productImg || "";
       let fileResponse = editData?.imageId || "";
+      let finalImageId = editData?.imageId || "";
 
       // Upload Image (Only if a new file is selected)
       if (imageFile) {
+        console.log("Uploading file:", imageFile);
         fileResponse = await storage.createFile({
           bucketId: bucketId,
           fileId: ID.unique(),
           file: imageFile,
         });
+
+        finalImageId = fileResponse.$id;
 
         fileUrl = storage.getFileView({
           bucketId: bucketId,
@@ -145,7 +150,7 @@ const AddProducts = () => {
         productImg: fileUrl,
         quantityOptions: JSON.stringify(quantityOptions),
         productDescription: formData.productDescription,
-        imageId: fileResponse.$id,
+        imageId: finalImageId,
       };
 
       // Update or Create Logic
@@ -225,13 +230,20 @@ const AddProducts = () => {
             <label className="text-sm font-semibold text-gray-600">
               Base Price (₹)
             </label>
+            {/* Base Price (₹) Input */}
             <input
               type="number"
               required
               value={formData.price}
-              onChange={(e) =>
-                setFormData({ ...formData, price: e.target.value })
-              }
+              onChange={(e) => {
+                const val = e.target.value;
+                setFormData({ ...formData, price: val });
+
+                // Sync with first variant
+                const updatedOptions = [...quantityOptions];
+                updatedOptions[0].appPrice = val === "" ? "" : Number(val);
+                setQuantityOptions(updatedOptions);
+              }}
               placeholder="e.g. 100"
               className="border-2 p-2 rounded-lg focus:border-blue-500 outline-none transition"
             />
@@ -257,12 +269,19 @@ const AddProducts = () => {
             <label className="text-sm font-semibold text-gray-600">
               Overall Discount
             </label>
+            {/* Overall Discount Input */}
             <input
               type="number"
               value={formData.discount}
-              onChange={(e) =>
-                setFormData({ ...formData, discount: e.target.value })
-              }
+              onChange={(e) => {
+                const val = e.target.value;
+                setFormData({ ...formData, discount: val });
+
+                // Sync with first variant
+                const updatedOptions = [...quantityOptions];
+                updatedOptions[0].discount = val === "" ? "" : Number(val);
+                setQuantityOptions(updatedOptions);
+              }}
               placeholder="e.g. 50"
               className="border-2 p-2 rounded-lg focus:border-blue-500 outline-none transition"
             />
@@ -276,9 +295,8 @@ const AddProducts = () => {
               type="file"
               accept="image/png, image/jpeg, image/jpg, image/webp"
               required={!isEditMode}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const file = e.target.files[0];
-
                 if (!file) return;
 
                 if (!file.type.startsWith("image/")) {
@@ -287,7 +305,31 @@ const AddProducts = () => {
                   return;
                 }
 
-                setImageFile(file);
+                const options = {
+                  maxSizeMB: 0.045, // Target slightly under 50KB (0.05MB)
+                  maxWidthOrHeight: 800, // Reduce resolution to help reach target size
+                  useWebWorker: true,
+                  fileType: "image/jpeg", // JPEGs compress much better than PNGs
+                };
+
+                try {
+                  setLoading(true);
+                  const compressedBlob = await imageCompression(file, options);
+
+                  // FIX: Convert the Blob to a real File object
+                  const finalizedFile = new File([compressedBlob], file.name, {
+                    type: "image/jpeg",
+                    lastModified: Date.now(),
+                  });
+
+                  console.log("Finalized File for Appwrite:", finalizedFile);
+                  setImageFile(finalizedFile); // Now imageFile is a real File object
+                } catch (error) {
+                  console.error("Compression Error:", error);
+                  alert("Failed to compress image.");
+                } finally {
+                  setLoading(false);
+                }
               }}
               className="border-2 p-1.5 rounded-lg bg-gray-50 cursor-pointer"
             />
@@ -349,11 +391,13 @@ const AddProducts = () => {
                 <input
                   type="number"
                   value={opt.appPrice}
+                  // Disable manual editing for the first row to keep it synced with Base Price
+                  readOnly={index === 0}
                   onChange={(e) =>
                     handleOptionChange(index, "appPrice", e.target.value)
                   }
+                  className={`border p-2 rounded ${index === 0 ? "bg-gray-200 cursor-not-allowed" : "bg-gray-50"}`}
                   placeholder="e.g. 110"
-                  className="border p-2 rounded bg-gray-50"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -377,11 +421,13 @@ const AddProducts = () => {
                 <input
                   type="number"
                   value={opt.discount}
+                  // Disable manual editing for the first row to keep it synced with overall discount
+                  readOnly={index === 0}
                   onChange={(e) =>
                     handleOptionChange(index, "discount", e.target.value)
                   }
                   placeholder="e.g. 10"
-                  className="border p-2 rounded bg-gray-50"
+                  className={`border p-2 rounded ${index === 0 ? "bg-gray-200 cursor-not-allowed" : "bg-gray-50"}`}
                 />
               </div>
               {quantityOptions.length > 1 && (
